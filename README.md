@@ -35,6 +35,27 @@ Make sure you have installed below in your PC or have added into the PATH.
 - mp4decrypt (bento4)
 - ccextractor
 
+### How to install MP4Box
+On MacOS, install with brew:
+```
+brew install gpac
+```
+### How to install mp4decrypt
+- Pre-compiled binaries are available here: https://www.bento4.com/downloads/
+- Download them, then add the `bin` directory to system PATH.
+
+### How to install ccextractor
+I didn't find available binaries for MacOS, so I compiled it from source:
+```
+git clone https://github.com/CCExtractor/ccextractor.git
+brew install pkg-config
+brew install autoconf automake libtool
+cd ccextractor/mac
+./build.command
+# test build result
+./ccextractor
+```
+
 ## Usage
 
 First of all you have to clone this project to your pc. If you're using git, you can do it simply by following command.
@@ -70,7 +91,38 @@ So, copy your widevine device directory to it. it should contain `device_client_
 .
 ```
 
-Then it will also ask for your `mediaUserToken`. Get it from cookies and add it to the program. You can get help page using below command.
+Then it will also ask for your `mediaUserToken`. Get it from cookies and add it to the program. 
+
+### How to obtain device files
+We will create a virtual Android device, open up a WideVine demo on this device, and download the device files from the device.
+
+1. Download Android Studio, create an empty project.
+2. Create an Virtual Android device, e.g. Pixel 8 Pro. Choose Android 13.0 *Google API*. Do not choose Google Play or Android Open Source Project. Finish, it will take a minute to download the SDK.
+3. Install [Frida](https://github.com/frida/frida/releases). On Mac, we can simply do `pip install frida`. Then, we need to install Frida server on the virtual Android device.
+   1. Find `frida-server-<version>-android-arm64.xz` in the release page, download and uncompress it. 
+   2. Go to `~/Library/Android/sdk/platform-tools`, you should see `adb` in this directory. That's android debugging bridge, we'll use it to copy the frida server binary to the device.
+   ```
+   ./adb root
+   ./adb push /path/to/frida-server-<version>-android-arm64 /data/local/tmp
+   ```
+4. Install KeyDrive: https://github.com/hyugogirubato/KeyDive/tree/main. This step requires adding adb to system PATH.
+5. Run Frida server on the device, and run KeyDrive:
+   ```
+   ./adb shell "chmod +x /data/local/tmp/frida-server"
+   ./adb shell "/data/local/tmp/frida-server -D &"
+   keydive -aw # I did this step in keydrive's directory
+   ```
+6. I found that the default WideVine demo that keydrive opens up doesn't work. On the device chrome, I googled a few options that actually opens up a video stream. Then, KeyDrive creates a `device` directory, at the innermost directory there are `client_id.bin` and `private_key.pem`. 
+7. Rename the two files to `device_client_id_blob` and `device_private_key`, copy it to the device folder in Manzana. The device name can be anything.
+
+### How to obtain `mediaUserToken`
+1. Open Chrome
+2. Login to Apple Music
+3. Right click -> Inspect -> Application -> Cookies
+4. Copy value of `mediaUserToken` and paste in terminal
+
+
+You can get help page using below command.
 
 ```
 python manzana.py -h
